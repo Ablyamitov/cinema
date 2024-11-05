@@ -6,9 +6,7 @@ import (
 	"log"
 )
 
-var DB *gorm.DB
-
-func Connect(url string) {
+func Connect(url string) *gorm.DB {
 	var err error
 	db, err := gorm.Open(postgres.Open(url), &gorm.Config{})
 	if err != nil {
@@ -16,5 +14,5 @@ func Connect(url string) {
 	}
 
 	log.Println("Database connected successfully")
-	DB = db
+	return db
 }

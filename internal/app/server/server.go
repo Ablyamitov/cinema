@@ -56,7 +56,6 @@ func (s *HttpServer) Run() {
 }
 
 func (s *HttpServer) Stop(ctx context.Context) {
-	// Завершение сервера с учетом тайм-аута
 	shutdownTimeout := 5 * time.Second
 	ctx, cancel := context.WithTimeout(ctx, shutdownTimeout)
 	defer cancel()

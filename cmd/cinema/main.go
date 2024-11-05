@@ -20,13 +20,13 @@ func main() {
 		log.Fatalf("Could not load config: %v", err)
 	}
 
-	db.Connect(conf.DB.URL)
+	gormDB := db.Connect(conf.DB.URL)
 
-	if err := db.DB.AutoMigrate(&models.Movie{}); err != nil {
+	if err := gormDB.AutoMigrate(&models.Movie{}); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
-	movieService := service.NewMovieService()
+	movieService := service.NewMovieService(gormDB)
 
 	app := initializeServer(conf, movieService)
 	app.Run()
