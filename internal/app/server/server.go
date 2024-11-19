@@ -3,13 +3,16 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/Ablyamitov/cinema/internal/app/dto"
-	"github.com/Ablyamitov/cinema/internal/app/mapper"
-	"github.com/Ablyamitov/cinema/internal/app/service"
-	"github.com/gofiber/fiber/v2"
 	"log"
 	"strconv"
 	"time"
+
+	"github.com/Ablyamitov/cinema/internal/app/dto"
+	"github.com/Ablyamitov/cinema/internal/app/mapper"
+	"github.com/Ablyamitov/cinema/internal/app/service"
+
+	"github.com/gofiber/fiber/v2"
+	fiberLogger "github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 type App interface {
@@ -26,7 +29,7 @@ type HttpServer struct {
 
 func NewServer(host string, port int, movieService *service.MovieService) App {
 	app := fiber.New()
-
+	app.Use(fiberLogger.New())
 	server := &HttpServer{
 		app:          app,
 		host:         host,
@@ -43,6 +46,9 @@ func (s *HttpServer) registerRoutes() {
 	s.app.Get("/movies", s.getAllMovies)
 	s.app.Put("/movies/:id", s.updateMovie)
 	s.app.Delete("/movies/:id", s.deleteMovie)
+
+	s.app.Get("/movies/comments/:id", s.getComment)
+	s.app.Post("/movies/comments", s.createComment)
 }
 
 func (s *HttpServer) Run() {
@@ -143,4 +149,35 @@ func (s *HttpServer) deleteMovie(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete movie"})
 	}
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+func (s *HttpServer) getComment(c *fiber.Ctx) error {
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid ID"})
+	}
+
+	comment, err := s.movieService.GetCommentByID(uint(id))
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Comment not found"})
+	}
+	response := mapper.MapCommentToCommentDTO(*comment)
+	return c.JSON(response)
+}
+
+// Создание фильма
+func (s *HttpServer) createComment(c *fiber.Ctx) error {
+	var request dto.CommentDTO
+	if err := c.BodyParser(&request); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid input"})
+	}
+
+	comment := mapper.MapCommentDTOToComment(request)
+
+	if err := s.movieService.CreateComment(&comment); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create comment"})
+	}
+
+	response := mapper.MapCommentToCommentDTO(comment)
+	return c.Status(fiber.StatusCreated).JSON(response)
 }

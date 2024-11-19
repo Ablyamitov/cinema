@@ -11,6 +11,8 @@ type MovieService interface {
 	UpdateMovie(movie *models.Movie) error
 	DeleteMovie(id uint) error
 	GetAllMovies() ([]models.Movie, error)
+	GetCommentByID(id uint) (*models.Comment, error)
+	CreateComment(movie *models.Comment) error
 }
 
 var _ MovieService = (*movieService)(nil)
@@ -49,4 +51,16 @@ func (s *movieService) GetAllMovies() ([]models.Movie, error) {
 		return nil, err
 	}
 	return movies, nil
+}
+
+func (s *movieService) GetCommentByID(id uint) (*models.Comment, error) {
+	var comment models.Comment
+	if err := s.db.First(&comment, id).Error; err != nil {
+		return nil, err
+	}
+	return &comment, nil
+}
+
+func (s *movieService) CreateComment(comment *models.Comment) error {
+	return s.db.Create(comment).Error
 }
