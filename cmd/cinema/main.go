@@ -2,17 +2,19 @@ package main
 
 import (
 	"context"
-	"github.com/Ablyamitov/cinema/internal/app/config"
-	"github.com/Ablyamitov/cinema/internal/app/db"
-	"github.com/Ablyamitov/cinema/internal/app/db/models"
-	"github.com/Ablyamitov/cinema/internal/app/server"
-	"github.com/Ablyamitov/cinema/internal/app/service"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Ablyamitov/cinema/internal/app/config"
+	"github.com/Ablyamitov/cinema/internal/app/db"
+	"github.com/Ablyamitov/cinema/internal/app/db/models"
+	"github.com/Ablyamitov/cinema/internal/app/server"
+	"github.com/Ablyamitov/cinema/internal/app/service"
 )
+
 
 func main() {
 	conf, err := setupConfig()
@@ -22,7 +24,7 @@ func main() {
 
 	gormDB := db.Connect(conf.DB.URL)
 
-	if err := gormDB.AutoMigrate(&models.Movie{}); err != nil {
+	if err := gormDB.AutoMigrate(&models.Movie{}, &models.Comment{}); err != nil {
 		log.Fatalf("Failed to migrate database: %v", err)
 	}
 
@@ -49,5 +51,4 @@ func waitForShutdown(app server.App) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	app.Stop(ctx)
-	log.Println("Server has stopped gracefully")
 }

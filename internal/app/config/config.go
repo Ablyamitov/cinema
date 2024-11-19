@@ -1,10 +1,10 @@
 package config
 
 import (
-	"errors"
 	"fmt"
-	"github.com/ilyakaznacheev/cleanenv"
 	"os"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -25,17 +25,19 @@ type DB struct {
 func MustLoad() (*Config, error) {
 	config := Config{}
 	configPath := os.Getenv("CONFIG_PATH")
+
 	if configPath == "" {
 		defaultPath := "./config/local.yaml"
+		//defaultPath := "C:/Users/ToTheMoon/Documents/go-project/cinema/config/local.yaml"
 		configPath = defaultPath
 	}
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		return nil, errors.New(fmt.Sprintf("config file is not exist: %s", configPath))
+		return nil, fmt.Errorf("config file is not exist: %s", configPath)
 	}
 
 	if err := cleanenv.ReadConfig(configPath, &config); err != nil {
-		return nil, errors.New(fmt.Sprintf("cannot read config: %s", err))
+		return nil, fmt.Errorf("cannot read config: %s", err)
 	}
 	return &config, nil
 }
